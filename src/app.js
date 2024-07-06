@@ -21,6 +21,15 @@ app.use(express.json());
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    keyGenerator: (req) => {
+        return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    },
+    handler: (req, res) => {
+        res.status(429).json({
+            status: 'error',
+            message: 'Too many requests, please try again later',
+        });
+    },
 });
 
 app.use(limiter);
