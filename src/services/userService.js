@@ -5,7 +5,7 @@ const getUserById = async ({ id, userId }) => {
     const user = await prisma.user.findFirst({
         where: {
             userId: id,
-            organisations: {
+            organizations: {
                 some: { userId }
             }
         }

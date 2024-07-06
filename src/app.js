@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const organisationRoutes = require('./routes/organizationRoutes');
+const organizationRoutes = require('./routes/organizationRoutes');
 
 const app = express();
 
@@ -25,10 +25,28 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
+// Request and Response Logger
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
+    });
+    next();
+});
+
+// Base URL message
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'Welcome to our API!',
+    });
+});
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/organizations', organisationRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 // Error Handling Middleware
 app.use(errorMiddleware);

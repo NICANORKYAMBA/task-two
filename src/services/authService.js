@@ -11,32 +11,44 @@ const registerUser = async ({
     password,
     phone
 }) => {
+    const existingUser = await prisma.user.findUnique({
+        where: { email }
+    });
+
+    if (existingUser) {
+        throw new Error('Email already in use');
+    }
+
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
-        data: {
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-            phone
-        }
-    });
+    const result = await prisma.$transaction(async (prisma) => {
+        const user = await prisma.user.create({
+            data: {
+                firstName,
+                lastName,
+                email,
+                password: hashedPassword,
+                phone
+            }
+        });
 
-    const orgName = `${firstName}'s Organization`;
+        const orgName = `${firstName}'s Organization`;
 
-    const organization = await prisma.organization.create({
-        data: {
-            name: orgName,
-            users: {
-                create: {
-                    userId: user.userId,
+        await prisma.organization.create({
+            data: {
+                name: orgName,
+                users: {
+                    create: {
+                        userId: user.userId,
+                    }
                 }
             }
-        }
+        });
+
+        return user;
     });
 
-    const token = generateToken(user.userId);
+    const token = generateToken(result.userId);
 
     return {
         status: 'success',
@@ -44,11 +56,11 @@ const registerUser = async ({
         data: {
             accessToken: token,
             user: {
-                userId: user.userId,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                phone: user.phone,
+                userId: result.userId,
+                firstName: result.firstName,
+                lastName: result.lastName,
+                email: result.email,
+                phone: result.phone,
             },
         }
     };

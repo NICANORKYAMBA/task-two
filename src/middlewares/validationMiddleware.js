@@ -57,8 +57,8 @@ const validate = (req, res, next) => {
         return res.status(422).json({
             errors: errors.array().map(error => ({
                 field: error.param,
-                message: error.msg,
-            })),
+                message: error.msg
+            }))
         });
     }
     next();
