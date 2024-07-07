@@ -227,6 +227,8 @@ npm start
         "message": "User added to organisation successfully"
     }
     ```
+- **Tests**
+Run `npm test` command to run Jest tests
 
 ## License
 
