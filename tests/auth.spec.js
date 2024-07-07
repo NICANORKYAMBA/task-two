@@ -158,74 +158,155 @@ describe('Organization Access', () => {
     }, 100000);
 });
 
-// describe('End-to-End Tests for /auth/register', () => {
-//     it('should register a new user successfully with default organization', async () => {
-//         const response = await request(app)
-//             .post('/auth/register')
-//             .send({
-//                 firstName: 'John',
-//                 lastName: 'Doe',
-//                 email: `johndoe-${uuid.v4()}@example.com`,
-//                 password: 'password123',
-//                 phone: '1234567890',
-//             });
+describe('End-to-End Tests for /auth/register', () => {
+    it('should register a new user successfully with default organization', async () => {
+        const response = await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                email: `johndoe-${uuid.v4()}@example.com`,
+                password: 'password12345',
+                phone: '1234567890',
+            });
 
-//         expect(response.status).toBe(201);
-//         expect(response.body).toHaveProperty('status', 'success');
-//         expect(response.body).toHaveProperty('message', 'User registered successfully');
-//         expect(response.body).toHaveProperty('data');
-//         expect(response.body.data).toHaveProperty('accessToken');
-//         expect(response.body.data).toHaveProperty('user');
-//         expect(response.body.data.user).toHaveProperty('userId');
-//         expect(response.body.data.user).toHaveProperty('firstName', 'John');
-//         // Add more assertions as needed for user details and default organization name
-//     });
+        expect(response.status).toBe(201);
+        expect(response.body).toHaveProperty('status', 'success');
+        expect(response.body).toHaveProperty('message', 'Registration successful');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('accessToken');
+        expect(response.body.data).toHaveProperty('user');
+        expect(response.body.data.user).toHaveProperty('userId');
+        expect(response.body.data.user).toHaveProperty('firstName', 'John');
+    }, 100000);
 
-//     it('should fail if required fields are missing', async () => {
-//         const response = await request(app)
-//             .post('/auth/register')
-//             .send({
-//                 firstName: 'John',
-//                 lastName: 'Doe',
-//                 phone: '1234567890',
-//             });
+    it('should fail if required fields are missing', async () => {
+        const response = await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: '1234567890',
+            });
+        
+        expect(response.status).toBe(422);
+        expect(response.body).toEqual({
+            errors: [
+                { message: 'Invalid email' },
+                { message: 'Email is required' },
+                { message: 'Password must be at least 12 characters long' },
+                { message: 'Password is required' }
+            ]
+        });
+    }, 100000);
 
-//         expect(response.status).toBe(422);
-//         expect(response.body).toHaveProperty('message', 'Validation error');
-//         expect(response.body).toHaveProperty('data');
-//         expect(response.body.data).toHaveProperty('errors');
-//         // Add more specific assertions for missing fields
-//     });
 
-//     it('should fail if email already in use', async () => {
-//         const email = `johndoe-${uuid.v4()}@example.com`;
+    it('should fail if email already in use', async () => {
+        const email = `johndoe-${uuid.v4()}@example.com`;
 
-//         // Register first user
-//         await request(app)
-//             .post('/auth/register')
-//             .send({
-//                 firstName: 'John',
-//                 lastName: 'Doe',
-//                 email,
-//                 password: 'password123',
-//                 phone: '1234567890',
-//             });
+        // Register first user
+        await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                email,
+                password: 'password12345',
+                phone: '1234567890',
+            });
 
-//         // Attempt to register with the same email
-//         const response = await request(app)
-//             .post('/auth/register')
-//             .send({
-//                 firstName: 'Jane',
-//                 lastName: 'Smith',
-//                 email,
-//                 password: 'password456',
-//                 phone: '9876543210',
-//             });
+        // Attempt to register with the same email
+        const response = await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'Jane',
+                lastName: 'Smith',
+                email,
+                password: 'password4567',
+                phone: '9876543210',
+            });
 
-//         expect(response.status).toBe(422);
-//         expect(response.body).toHaveProperty('message', 'Validation error');
-//         expect(response.body).toHaveProperty('data');
-//         expect(response.body.data).toHaveProperty('errors');
-//         // Add more specific assertions for duplicate email error
-//     });
-// });
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('message', 'Registration unsuccessful');
+        expect(response.body).toHaveProperty('status', 'Bad Request');
+        expect(response.body.data).toBeUndefined();
+    });
+});
+
+describe('End-to-End Tests for /auth/login', () => {
+    it('should login a user successfully', async () => {
+        const email = `johndoe-${uuid.v4()}@example.com`;
+
+        // Register user
+        await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                email,
+                password: 'password12345',
+                phone: '1234567890',
+            });
+
+        // Login user
+        const response = await request(app)
+            .post('/auth/login')
+            .send({
+                email,
+                password: 'password12345',
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('status', 'success');
+        expect(response.body).toHaveProperty('message', 'Login successful');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('accessToken');
+        expect(response.body.data).toHaveProperty('user');
+        expect(response.body.data.user).toHaveProperty('userId');
+        expect(response.body.data.user).toHaveProperty('firstName', 'John');
+    }, 100000);
+
+    it('should fail if email or password is incorrect', async () => {
+        const email = `johndoe-${uuid.v4()}@example.com`;
+
+        // Register user
+        await request(app)
+            .post('/auth/register')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                email,
+                password: 'password12345',
+                phone: '1234567890',
+            });
+
+        // Login user with incorrect password
+        let response = await request(app)
+            .post('/auth/login')
+            .send({
+                email,
+                password: 'password1234567',
+            });
+
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('status', 'Bad Request');
+        expect(response.body).toHaveProperty('message', 'Authentication failed');
+        expect(response.body).toHaveProperty('statusCode', 401);
+        expect(response.body.data).toBeUndefined();
+
+        // Login user with incorrect email
+        response = await request(app)
+            .post('/auth/login')
+            .send({
+                email: 'user@example.com',
+                password: 'password12345',
+            });
+        
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('status', 'Bad Request');
+        expect(response.body).toHaveProperty('message', 'Authentication failed');
+        expect(response.body).toHaveProperty('statusCode', 401);
+        expect(response.body.data).toBeUndefined();
+
+    }, 100000);
+});
