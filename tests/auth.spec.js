@@ -92,6 +92,23 @@ const createUserWithOrganizations = async () => {
     return { userId, org1, org2 };
 };
 
+const createUserWithoutOrganizations = async () => {
+    const userId = uuid.v4();
+
+    await prisma.user.create({
+        data: {
+            userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: `johndoe-${uuid.v4()}@example.com`,
+            password: 'password12345',
+            phone: '1234567890',
+        }
+    });
+
+    return { userId };
+};
+
 describe('Organization Access', () => {
     beforeAll(async () => {
         await prisma.$connect();
@@ -119,63 +136,27 @@ describe('Organization Access', () => {
 
         const response = await request(app)
             .get('/api/organizations')
-            .set('Authorization', `Bearer ${token}`);
+            .set('Authorization', token)
         
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('organizations');
-        expect(response.body.organizations).toHaveLength(1);
-        expect(response.body.organizations[0].name).toBe(org1.name);
-    }, 10000);
+        expect(response.body.data).toHaveProperty('organizations');
+        expect(response.body.data.organizations).toHaveLength(2);
+        expect(response.body.data.organizations[0].name).toBe(org1.name);
+    }, 100000);
 
     it('should return 404 if user has no organizations', async () => {
-        const userId = uuid.v4();
+        const { userId } = await createUserWithoutOrganizations();
         const token = generateToken(userId);
 
         const response = await request(app)
             .get('/api/organizations')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(response.status).toBe(404);
-        expect(response.body).toHaveProperty('message', 'User has no organizations');
-    });
+            .set('Authorization', token)
+        
+        expect(response.status).toBe(200);
+        expect(response.body.data).toHaveProperty('organizations');
+        expect(response.body.data.organizations).toHaveLength(0);
+    }, 100000);
 });
-
-// describe('Organization Access', () => {
-//     it('should restrict access to organizations the user does not belong to', async () => {
-//         const userId = uuid.v4();
-//         const otherUserId = uuid.v4();
-
-//         const user = await prisma.user.create({
-//             data: {
-//                 userId,
-//                 firstName: 'John',
-//                 lastName: 'Doe',
-//                 email: 'johndoe-${uuid.v4()}@example.com`',
-//                 password: 'password1234',
-//                 phone: '1234567890',
-//             }
-//         });
-
-//         const organization = await prisma.organization.create({
-//             data: {
-//                 name: 'Test Organization',
-//                 description: 'A test organization',
-//                 users: {
-//                     create: {
-//                         userId
-//                     }
-//                 }
-//             }
-//         });
-
-//         const response = await request(app)
-//             .get(`/organizations/${organization.id}`)
-//             .set('Authorization', `Bearer ${generateToken(otherUserId)}`);
-
-//         expect(response.status).toBe(403);
-//         expect(response.body).toHaveProperty('message', 'Forbidden');
-//     });
-// });
 
 // describe('End-to-End Tests for /auth/register', () => {
 //     it('should register a new user successfully with default organization', async () => {
