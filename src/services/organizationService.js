@@ -123,12 +123,6 @@ const addUserToOrg = async ({ orgId, userId }) => {
         return {
             status: 'success',
             message: 'User added to organization successfully',
-            data: {
-                orgId: organization.orgId,
-                userId: user.userId,
-                name: organization.name,
-                description: organization.description
-            }
         };
     } catch (err) {
         throw new Error('Error adding user to organization');
