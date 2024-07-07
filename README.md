@@ -55,7 +55,7 @@ This project is a Node.js application built with Express.js and Prisma ORM. It h
 Start the server:
 
 ```bash
-npm start
+npm run dev
 ```
 
 ## API Endpoints
