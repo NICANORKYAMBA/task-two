@@ -137,7 +137,7 @@ describe('Organization Access', () => {
         const token = generateToken(userId);
 
         const response = await request(app)
-            .get('/api/organizations')
+            .get('/api/organisations')
             .set('Authorization', token)
         
         expect(response.status).toBe(200);
@@ -151,7 +151,7 @@ describe('Organization Access', () => {
         const token = generateToken(userId);
 
         const response = await request(app)
-            .get('/api/organizations')
+            .get('/api/organisations')
             .set('Authorization', token)
         
         expect(response.status).toBe(200);

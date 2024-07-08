@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/organizations', organizationRoutes);
+app.use('/api/organisations', organizationRoutes);
 
 // Error Handling Middleware
 app.use(errorMiddleware);
