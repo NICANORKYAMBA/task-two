@@ -138,7 +138,7 @@ describe('Organization Access', () => {
 
         const response = await request(app)
             .get('/api/organisations')
-            .set('Authorization', token)
+            .set('Authorization', `Bearer ${token}`);
         
         expect(response.status).toBe(200);
         expect(response.body.data).toHaveProperty('organizations');
@@ -152,7 +152,7 @@ describe('Organization Access', () => {
 
         const response = await request(app)
             .get('/api/organisations')
-            .set('Authorization', token)
+            .set('Authorization', `Bearer ${token}`);
         
         expect(response.status).toBe(200);
         expect(response.body.data).toHaveProperty('organizations');
@@ -340,7 +340,7 @@ describe('User API', () => {
 
         const response = await request(app)
             .get(`/api/users/${userId}`)
-            .set('Authorization', token);
+            .set('Authorization', `Bearer ${token}`);
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('status', 'success');
@@ -369,7 +369,7 @@ describe('User API', () => {
 
         const response = await request(app)
             .get(`/api/users/${userId2}`)
-            .set('Authorization', token);
+            .set('Authorization', `Bearer ${token}`);
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('status', 'success');
@@ -389,7 +389,7 @@ describe('User API', () => {
 
         const response = await request(app)
             .get(`/api/users/${nonExistentUserId}`)
-            .set('Authorization', token);
+            .set('Authorization', `Bearer ${token}`);
 
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty('status', 'Bad Request');
