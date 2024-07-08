@@ -53,6 +53,7 @@ describe('Token Generation', () => {
 // Helper function to create a user with organizations
 const createUserWithOrganizations = async () => {
     const userId = uuid.v4();
+    const phone = `123456{Math.floor(Math.random() * 10000)}`;
 
     await prisma.user.create({
         data: {
@@ -61,7 +62,7 @@ const createUserWithOrganizations = async () => {
             lastName: 'Doe',
             email: `johndoe-${uuid.v4()}@example.com`,
             password: 'password12345',
-            phone: '1234567890',
+            phone,
         }
     });
 
@@ -94,6 +95,7 @@ const createUserWithOrganizations = async () => {
 
 const createUserWithoutOrganizations = async () => {
     const userId = uuid.v4();
+    const phone = `123759{Math.floor(Math.random() * 10000)}`;
 
     await prisma.user.create({
         data: {
@@ -102,7 +104,7 @@ const createUserWithoutOrganizations = async () => {
             lastName: 'Doe',
             email: `johndoe-${uuid.v4()}@example.com`,
             password: 'password12345',
-            phone: '1234567890',
+            phone,
         }
     });
 
@@ -309,4 +311,110 @@ describe('End-to-End Tests for /auth/login', () => {
         expect(response.body.data).toBeUndefined();
 
     }, 100000);
+});
+
+describe('User API', () => {
+    beforeAll(async () => {
+        await prisma.$connect();
+    });
+
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
+
+    beforeEach(async () => {
+        await prisma.organizationUser.deleteMany({});
+        await prisma.organization.deleteMany({});
+        await prisma.user.deleteMany({});
+    });
+
+    afterEach(async () => {
+        await prisma.organizationUser.deleteMany({});
+        await prisma.organization.deleteMany({});
+        await prisma.user.deleteMany({});
+    });
+
+    it('should retrieve the logged-in user\'s data', async () => {
+        const { userId } = await createUserWithOrganizations();
+        const token = generateToken(userId);
+
+        const response = await request(app)
+            .get(`/api/users/${userId}`)
+            .set('Authorization', token);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('status', 'success');
+        expect(response.body).toHaveProperty('message', 'User retrieved successfully');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('userId', userId);
+        expect(response.body.data).toHaveProperty('firstName', 'John');
+        expect(response.body.data).toHaveProperty('lastName', 'Doe');
+        expect(response.body.data).toHaveProperty('email');
+        expect(response.body.data).toHaveProperty('phone');
+    }, 100000);
+
+    it('should retrieve data of another user in the same organization', async () => {
+        const { userId: userId1, org1 } = await createUserWithOrganizations();
+        const { userId: userId2 } = await createUserWithoutOrganizations();
+
+        // Add user2 to org1
+        await prisma.organizationUser.create({
+            data: {
+                orgId: org1.orgId,
+                userId: userId2
+            }
+        });
+
+        const token = generateToken(userId1);
+
+        const response = await request(app)
+            .get(`/api/users/${userId2}`)
+            .set('Authorization', token);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('status', 'success');
+        expect(response.body).toHaveProperty('message', 'User retrieved successfully');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('userId', userId2);
+        expect(response.body.data).toHaveProperty('firstName', 'John');
+        expect(response.body.data).toHaveProperty('lastName', 'Doe');
+        expect(response.body.data).toHaveProperty('email');
+        expect(response.body.data).toHaveProperty('phone');
+    }, 100000);
+
+    it('should return 400 if user is not found', async () => {
+        const { userId } = await createUserWithOrganizations();
+        const token = generateToken(userId);
+        const nonExistentUserId = 'non-existent-user-id';
+
+        const response = await request(app)
+            .get(`/api/users/${nonExistentUserId}`)
+            .set('Authorization', token);
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('status', 'Bad Request');
+        expect(response.body).toHaveProperty('message', 'Client error');
+    }, 100000);
+
+    it('should return 401 if no token is provided', async () => {
+        const { userId } = await createUserWithOrganizations();
+
+        const response = await request(app)
+            .get(`/api/users/${userId}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('message', 'Authorization denied');
+    }, 100000);
+
+    it('should return 401 if an invalid token is provided', async () => {
+        const { userId } = await createUserWithOrganizations();
+        const invalidToken = 'invalid-token';
+
+        const response = await request(app)
+            .get(`/api/users/${userId}`)
+            .set('Authorization', `Bearer ${invalidToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty('message', 'Invalid token');
+    });
 });

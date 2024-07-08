@@ -1,8 +1,8 @@
 const { getUserById } = require('../services/userService');
 
-const getUser = async (req, res, next) => {
+const getUser = async (req, res) => {
     const { id } = req.params;
-    const { userId } = req;
+    const { userId } = req.user;
 
     try {
         const user = await getUserById({ id, userId });
@@ -12,7 +12,11 @@ const getUser = async (req, res, next) => {
             data: user
         });
     } catch (err) {
-        next(err);
+        res.status(400).json({
+            status: "Bad Request",
+            message: "Client error",
+            statusCode: 400
+        });
     }
 };
 
