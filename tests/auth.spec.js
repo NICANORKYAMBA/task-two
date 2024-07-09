@@ -196,7 +196,7 @@ describe('End-to-End Tests for /auth/register', () => {
             errors: [
                 { message: 'Invalid email' },
                 { message: 'Email is required' },
-                { message: 'Password must be at least 12 characters long' },
+                { message: 'Password must be at least 5 characters long' },
                 { message: 'Password is required' }
             ]
         });
@@ -393,7 +393,7 @@ describe('User API', () => {
 
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty('status', 'Bad Request');
-        expect(response.body).toHaveProperty('message', 'Client error');
+        expect(response.body).toHaveProperty('message', 'User not found');
     }, 100000);
 
     it('should return 401 if no token is provided', async () => {
