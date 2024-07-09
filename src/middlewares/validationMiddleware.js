@@ -17,8 +17,8 @@ const userRegistrationValidationRules = () => [
         .notEmpty()
         .withMessage('Email is required'),
     body('password')
-        .isLength({ min: 12 })
-        .withMessage('Password must be at least 12 characters long')
+        .isLength({ min: 5 })
+        .withMessage('Password must be at least 5 characters long')
         .notEmpty()
         .withMessage('Password is required'),
     body('phone')
