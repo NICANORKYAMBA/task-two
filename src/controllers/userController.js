@@ -12,10 +12,10 @@ const getUser = async (req, res) => {
             data: user
         });
     } catch (err) {
-        res.status(400).json({
-            status: "Bad Request",
-            message: "Client error",
-            statusCode: 400
+        res.status(404).json({
+            status: "error",
+            message: err.message,
+            statusCode: 404
         });
     }
 };
