@@ -36,22 +36,22 @@ const createNewOrganization = async ({ userId, name, description }) => {
 
 const getAllUserOrganizations = async (userId) => {
     try {
-        const organizations = await prisma.organizationUser.findMany({
+        const organisations = await prisma.organizationUser.findMany({
             where: { userId },
             include: {
                 organization: true
             }
         });
 
-        if (!organizations || organizations.length === 0) {
+        if (!organisations || organisations.length === 0) {
             return {
                 status: 'success',
                 message: 'User has no organizations',
-                data: { organizations: [] }
+                data: { organisations: [] }
             };
         }
 
-        const orgs = organizations.map(org => ({
+        const orgs = organisations.map(org => ({
             orgId: org.organization.orgId,
             name: org.organization.name,
             description: org.organization.description
@@ -60,7 +60,7 @@ const getAllUserOrganizations = async (userId) => {
         return {
             status: 'success',
             message: 'User organizations retrieved successfully',
-            data: { organizations: orgs }
+            data: { organisations: orgs }
         };
     } catch (err) {
         throw new Error('Error retrieving user organizations');
